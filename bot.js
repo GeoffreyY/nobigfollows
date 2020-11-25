@@ -3,8 +3,8 @@ const { ChatClient } = require('twitch-chat-client');
 
 async function main() {
     const clientId = process.env.TWITCH_CLIENT_ID;
-    const clientSecret = process.env.TWITCH_OAUTH_TOKEN;
-    const auth = new StaticAuthProvider(clientId, tokenData.accessToken);
+    const accessToken = process.env.TWITCH_OAUTH_TOKEN;
+    const auth = new StaticAuthProvider(clientId, accessToken);
 
     const chatClient = new ChatClient(auth, { channels: ['iceman1415'] });
     await chatClient.connect();
