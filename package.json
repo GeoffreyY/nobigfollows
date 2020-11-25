@@ -10,6 +10,8 @@
     "author": "Geoffrey Yeung",
     "license": "MIT",
     "dependencies": {
-        "twitch": "^4.3.1"
+        "twitch": "^4.3.1",
+        "twitch-auth": "^4.3.1",
+        "twitch-chat-client": "^4.3.1"
     }
 }
