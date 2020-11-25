@@ -1,5 +1,5 @@
-import { StaticAuthProvider } from 'twitch-auth';
-import { ChatClient } from 'twitch-chat-client';
+const { StaticAuthProvider } = require('twitch-auth');
+const { ChatClient } = require('twitch-chat-client');
 
 async function main() {
     const clientId = process.env.TWITCH_CLIENT_ID;
