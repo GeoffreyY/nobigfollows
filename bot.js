@@ -57,7 +57,8 @@ async function main() {
     db_client.release();
 
     var workers = {};
-    for (id of twitch_ids.rows) {
+    for (row_dict of twitch_ids.rows) {
+        var id = row_dict.twitch_id;
         workers[id] = create_worker(id);
     }
 }
