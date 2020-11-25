@@ -15,11 +15,11 @@ const db_pool = new Pool({
 
 async function create_worker(id) {
     const db_client = await db_pool.connect();
-    var response = await db_client.query('SELECT (twitch_name, access_token, refresh_token, expiry) FROM access_tokens WHERE twitch_id = $1', [id]);
+    var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry FROM access_tokens WHERE twitch_id = $1', [id]);
     if (response.rows.length === 0) {
         return;
     }
-    const [twitch_name, accessToken, refreshToken, expiry] = response.rows[0];
+    const { twitch_name, access_token: accessToken, refresh_token: refreshToken, expiry } = response.rows[0];
     db_client.release();
 
     const auth = new RefreshableAuthProvider(
@@ -40,8 +40,8 @@ async function create_worker(id) {
     await chatClient.connect();
 
     chatClient.onMessage((channel, user, message) => {
-        if (message === '!ping') {
-            chatClient.say(channel, 'Pong!');
+        if (message === '>>> ping?') {
+            chatClient.say(channel, '<<< Pong!');
         }
         var noramlized = message.normalize("NFD").split('').filter(c => c.match(/[a-zA-Z]/)).join('').toLowerCase();
         if (noramlized.includes('bigfollowscom') && noramlized.includes('buyfollowersprimesandviewers')) {
