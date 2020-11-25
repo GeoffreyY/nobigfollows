@@ -7,7 +7,13 @@ const my_domain = "https://nobigfollowstwitchbot.herokuapp.com";
 
 app.use(express.json());
 
+app.get("/", function (req, res) {
+    res.send(`Hello World!`)
+});
+
 app.get("/register", function (req, res) {
+    console.log(req, res);
+    console.log('Redirecting to register...');
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${my_domain}/redirect&response_type=code&scope=chat:read+chat:edit+channel:moderate`)
 });
 
