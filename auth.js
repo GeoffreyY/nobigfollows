@@ -29,5 +29,6 @@ app.get("/redirect2", function (req, res) {
     console.log(payload);
 })
 
-app.listen(process.env.PORT || 443,
-    () => console.log("Auth server is running..."));
+var port = process.env.PORT || 443;
+app.listen(port,
+    () => console.log(`Auth server is running at port ${port}...`));
