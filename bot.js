@@ -4,7 +4,7 @@ const clientId = process.env.TWITCH_CLIENT_ID;
 const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 
 const { Pool } = require('pg');
-const { workers } = require('cluster');
+//const { workers } = require('cluster');
 const database_url = process.env.DATABASE_URL;
 const db_pool = new Pool({
     connectionString: database_url,
@@ -56,7 +56,7 @@ async function main() {
     var twitch_ids = await db_client.query('SELECT twitch_id FROM access_tokens');
     db_client.release();
 
-    workers = {};
+    var workers = {};
     for (id of twitch_ids.rows) {
         workers[id] = create_worker(id);
     }
