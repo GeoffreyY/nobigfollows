@@ -10,7 +10,9 @@
     "author": "Geoffrey Yeung",
     "license": "MIT",
     "dependencies": {
+        "axios": "^0.21.0",
         "express": "^4.17.1",
+        "pg": "^8.5.1",
         "twitch": "^4.3.1",
         "twitch-auth": "^4.3.1",
         "twitch-chat-client": "^4.3.1"
