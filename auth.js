@@ -11,7 +11,7 @@ app.get("/register", function (req, res) {
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${my_domain}/redirect&response_type=code&scope=chat:read+chat:edit+channel:moderate`)
 });
 
-app.get("/redirect", function (req, res) {
+app.get("/redirect", async function (req, res) {
     console.log(req, res);
     var code = req.query.code;
     var post_res = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${twitch_client_id}&client_secret=${twitch_client_secret}&code=${code}&grant_type=authorization_code&redirect_uri=${my_domain}/redirect2`,
