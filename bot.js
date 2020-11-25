@@ -1,37 +1,23 @@
-const tmi = require('tmi.js');
+import { StaticAuthProvider } from 'twitch-auth';
+import { ChatClient } from 'twitch-chat-client';
 
-const opts = {
-    identity: {
-        username: process.env.TWITCH_USERNAME,
-        password: process.env.TWITCH_OAUTH_TOKEN
-    },
-    // TODO: use a config file or something for list of channels?
-    channels: [
-        'iceman1415'
-    ]
-};
+async function main() {
+    const clientId = process.env.TWITCH_CLIENT_ID;
+    const clientSecret = process.env.TWITCH_OAUTH_TOKEN;
+    const auth = new StaticAuthProvider(clientId, tokenData.accessToken);
 
-const client = new tmi.client(opts);
+    const chatClient = new ChatClient(auth, { channels: ['iceman1415'] });
+    await chatClient.connect();
 
-client.on('connected', onConnectedHandler);
-client.on('message', onMessageHandler);
-client.connect();
-
-function onConnectedHandler(addr, port) {
-    console.log(`* Connected to ${addr}:${port}`);
+    chatClient.onMessage((channel, user, message) => {
+        if (message === '!ping') {
+            chatClient.say(channel, 'Pong!');
+        }
+        var noramlized = message.normalize("NFD").split('').filter(c => c.match(/[a-zA-Z]/)).join('').toLowerCase();
+        if (noramlized.includes('bigfollowscom') && noramlized.includes('buyfollowersprimesandviewers')) {
+            chatClient.ban(channel, user, 'big follows bot');
+        }
+    });
 }
 
-function onMessageHandler(target, context, msg, self) {
-    if (self) { return; } // Ignore messages from the bot
-
-    // Remove whitespace from chat message
-    const commandName = msg.trim();
-
-    // If the command is known, let's execute it
-    if (commandName === '!dice') {
-        client.say(target, `You rolled a NULL. What?`);
-        console.log(`* Executed ${commandName} command`);
-    } else {
-        console.log(`* Unknown command ${commandName}`);
-    }
-}
+main();

@@ -10,6 +10,6 @@
     "author": "Geoffrey Yeung",
     "license": "MIT",
     "dependencies": {
-        "tmi.js": "^1.5.0"
+        "twitch": "^4.3.1"
     }
 }
