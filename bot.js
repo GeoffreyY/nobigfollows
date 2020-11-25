@@ -13,6 +13,10 @@ const db_pool = new Pool({
     }
 });
 
+const redis = require("redis");
+const redis_url = process.env.REDIS_URL;
+const redis_client = redis.createClient(redis_url);
+
 async function create_worker(id) {
     const db_client = await db_pool.connect();
     var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry FROM access_tokens WHERE twitch_id = $1', [id]);
@@ -51,16 +55,37 @@ async function create_worker(id) {
     return chatClient;
 }
 
+var workers = {};
+
 async function main() {
     const db_client = await db_pool.connect();
     var twitch_ids = await db_client.query('SELECT twitch_id FROM access_tokens');
     db_client.release();
 
-    var workers = {};
     for (row_dict of twitch_ids.rows) {
         var id = row_dict.twitch_id;
-        workers[id] = create_worker(id);
+        workers[id] = await create_worker(id);
     }
 }
+
+redis_client.on("message", async (channel, message) => {
+    console.log(channel, message);
+    if (channel == "launch") {
+        // remove old worker if it existed
+        if (message in workers) {
+            await workers[message].quit();
+            delete workers[message];
+        }
+        workers[message] = await create_worker(message);
+    } else if (channel == "kill") {
+        if (message in workers) {
+            await workers[message].quit();
+            delete workers[message];
+        }
+    }
+});
+
+redis_client.subscribe("launch");
+redis_client.subscribe("kill");
 
 main();

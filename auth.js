@@ -11,6 +11,10 @@ const db_pool = new Pool({
     }
 });
 
+const redis = require("redis");
+const redis_url = process.env.REDIS_URL;
+const redis_client = redis.createClient(redis_url);
+
 const twitch_client_id = process.env.TWITCH_CLIENT_ID;
 const twitch_client_secret = process.env.TWITCH_CLIENT_SECRET;
 const domain = process.env.DOMAIN || "http://localhost:5000";
@@ -49,6 +53,7 @@ app.get("/redirect", async function (req, res) {
         .then(r => r.data[0])
         .catch(err => console.error(err));
     console.log(user_data);
+    user_data.id = parseInt(user_data.id, 10);
 
     const db_client = await db_pool.connect();
     var expiry = new Date();
@@ -57,8 +62,30 @@ app.get("/redirect", async function (req, res) {
     await db_client.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
     db_client.release();
 
+    redis_client.publish("launch", user_data.id);
+
     res.send(`${user_data.display_name}, you have been registered!`);
 });
+
+app.get("/unregister", async function (req, res) {
+    if (req.query.id) {
+        const id = parseInt(req.query.id, 10);
+        redis_client.publish("kill", id);
+        res.send(`twich channel with id ${id} have been unregistered`)
+    } else if (req.query.name) {
+        var name = req.query.name;
+        const db_client = await db_pool.connect();
+        const db_res = await db_client.query("SELECT twitch_id FROM access_tokens WHERE twitch_name = $1", [name]);
+        if (db_res.rows.length === 0) {
+            res.send("cannot find name")
+        } else {
+            const id = parseInt(db_res.rows[0].twitch_id, 10);
+            redis_client.publish("kill", id);
+            res.send(`${name} have been unregistered`);
+        }
+        db_client.release();
+    }
+})
 
 var port = process.env.PORT || 5000;
 app.listen(port,
