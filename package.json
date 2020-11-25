@@ -1,0 +1,15 @@
+{
+    "name": "no-big-follows-twitch-bot",
+    "version": "0.0.1",
+    "description": "Wanna become famous?",
+    "main": "bot.js",
+    "scripts": {
+        "start": "node bot.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Geoffrey Yeung",
+    "license": "MIT",
+    "dependencies": {
+        "tmi.js": "^1.5.0"
+    }
+}
