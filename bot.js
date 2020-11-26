@@ -17,6 +17,8 @@ const redis = require("redis");
 const redis_url = process.env.REDIS_URL;
 const redis_client = redis.createClient(redis_url);
 
+import { substring_distance } from './lib.js'
+
 async function create_worker(id) {
     const db_client = await db_pool.connect();
     var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry FROM access_tokens WHERE twitch_id = $1', [id]);
@@ -47,8 +49,11 @@ async function create_worker(id) {
         if (message === '>>> ping?') {
             chatClient.say(channel, '<<< Pong!');
         }
-        var noramlized = message.normalize("NFD").split('').filter(c => c.match(/[a-zA-Z]/)).join('').toLowerCase();
-        if (noramlized.includes('bigfollowscom') && noramlized.includes('buyfollowersprimesandviewers')) {
+        const noramlized = message.normalize("NFD").split('').filter(c => c.match(/[a-zA-Z]/)).join('').toLowerCase();
+        var similarity = substring_distance('bigfollowscom', noramlized);
+        similarity += substring_distance('buyfollowersprimesandviewers', noramlized);
+        if (similarity <= 3) {
+            console.log('detected bot:', channel, user, message);
             chatClient.ban(channel, user, 'big follows bot');
         }
     });
