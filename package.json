@@ -16,6 +16,7 @@
         "redis": "^3.0.2",
         "twitch": "^4.3.1",
         "twitch-auth": "^4.3.1",
-        "twitch-chat-client": "^4.3.1"
+        "twitch-chat-client": "^4.3.1",
+        "uuid": "^8.3.1"
     }
 }
