@@ -72,10 +72,12 @@ async function main() {
     var twitch_ids = await db_client.query('SELECT twitch_id FROM access_tokens');
     db_client.release();
 
+    const redis_client_pub = redis.createClient(redis_url);
     for (row_dict of twitch_ids.rows) {
         var id = row_dict.twitch_id;
-        workers[id] = await create_worker(id);
+        redis_client_pub.publish("launch", id);
     }
+    redis_client_pub.quit();
 }
 
 redis_client.on("message", async (channel, message) => {
@@ -83,6 +85,7 @@ redis_client.on("message", async (channel, message) => {
     if (channel == "launch") {
         // remove old worker if it existed
         if (message in workers) {
+            console.log('removing previous:', message, typeof workers[message])
             await workers[message].quit();
             delete workers[message];
         }
