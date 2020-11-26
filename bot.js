@@ -17,7 +17,7 @@ const redis = require("redis");
 const redis_url = process.env.REDIS_URL;
 const redis_client = redis.createClient(redis_url);
 
-import { substring_distance } from './lib.js'
+const { substring_distance } = require('./lib.js');
 
 async function create_worker(id) {
     const db_client = await db_pool.connect();
