@@ -21,11 +21,11 @@ const { substring_distance } = require('./lib.js');
 
 async function create_worker(id) {
     const db_client = await db_pool.connect();
-    var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry FROM access_tokens WHERE twitch_id = $1', [id]);
+    var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [id]);
     if (response.rows.length === 0) {
         return;
     }
-    const { twitch_name, access_token: accessToken, refresh_token: refreshToken, expiry } = response.rows[0];
+    const { twitch_name, access_token: accessToken, refresh_token: refreshToken, expiry, plan_type } = response.rows[0];
     db_client.release();
 
     const auth = new RefreshableAuthProvider(
@@ -36,7 +36,7 @@ async function create_worker(id) {
             expiry: expiry,
             onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
                 const db_client = await db_pool.connect();
-                await db_client.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3", [accessToken, refreshToken, expiryDate])
+                await db_client.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3 WHERE twitch_id = $4", [accessToken, refreshToken, expiryDate, id])
                 db_client.release();
             }
         }
@@ -54,8 +54,12 @@ async function create_worker(id) {
         similarity += substring_distance('buyfollowersprimesandviewers', noramlized);
         if (similarity <= 3) {
             console.log('detected bot:', channel, user, message);
-            chatClient.purge(channel, user, 'big follows bot');
-            // chatClient.ban(channel, user, 'big follows bot');
+            if (plan_type == 'full') {
+                chatClient.purge(channel, user, 'big follows bot');
+                // chatClient.ban(channel, user, 'big follows bot');
+            } else if (plan_type == 'lite') {
+                chatClient.say(channel, "^ that is a spam / scam bot, < I'm a bot too")
+            }
         }
     });
     return chatClient;

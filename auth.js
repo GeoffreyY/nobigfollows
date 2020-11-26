@@ -24,48 +24,62 @@ app.get("/", function (req, res) {
 });
 
 app.get("/register", function (req, res) {
+    res.redirect('/register/full');
+});
+
+app.get("/register/full", function (req, res) {
     console.log('Redirecting to register...');
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect&response_type=code&scope=chat:read+chat:edit+channel:moderate`);
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/full&response_type=code&scope=chat:read+chat:edit+channel:moderate`);
 });
 
-app.get("/redirect", async function (req, res) {
-    var code = req.query.code;
-    console.log('received code:', code);
-    var token_data = await axios.post("https://id.twitch.tv/oauth2/token", null,
-        {
-            params: {
-                "client_id": twitch_client_id,
-                "client_secret": twitch_client_secret,
-                "code": code,
-                "grant_type": "authorization_code",
-                "redirect_uri": `${domain}/redirect`
-            }
-        }).then(r => r.data).catch(err => console.error(err));
-    console.log(token_data);
-    var user_data = await axios.get("https://api.twitch.tv/helix/users?",
-        {
-            headers: {
-                "Authorization": `Bearer ${token_data['access_token']}`,
-                "Client-Id": twitch_client_id
-            }
-        })
-        .then(r => r.data)
-        .then(r => r.data[0])
-        .catch(err => console.error(err));
-    console.log(user_data);
-    user_data.id = parseInt(user_data.id, 10);
-
-    const db_client = await db_pool.connect();
-    var expiry = new Date();
-    expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
-    // console.log([user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
-    await db_client.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
-    db_client.release();
-
-    redis_client.publish("launch", user_data.id);
-
-    res.send(`${user_data.display_name}, you have been registered!`);
+app.get("/register/lite", function (req, res) {
+    console.log('Redirecting to register...');
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/lite&response_type=code&scope=chat:read+chat:edit`);
 });
+
+function get_redirect_func(plan_type) {
+    return async function (req, res) {
+        var code = req.query.code;
+        console.log('received code:', code);
+        var token_data = await axios.post("https://id.twitch.tv/oauth2/token", null,
+            {
+                params: {
+                    "client_id": twitch_client_id,
+                    "client_secret": twitch_client_secret,
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": `${domain}/redirect/full`
+                }
+            }).then(r => r.data).catch(err => console.error(err));
+        console.log(token_data);
+        var user_data = await axios.get("https://api.twitch.tv/helix/users?",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token_data['access_token']}`,
+                    "Client-Id": twitch_client_id
+                }
+            })
+            .then(r => r.data)
+            .then(r => r.data[0])
+            .catch(err => console.error(err));
+        console.log(user_data);
+        user_data.id = parseInt(user_data.id, 10);
+
+        const db_client = await db_pool.connect();
+        var expiry = new Date();
+        expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
+        // console.log([user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
+        await db_client.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type]);
+        db_client.release();
+
+        redis_client.publish("launch", user_data.id);
+
+        res.send(`${user_data.display_name}, you have been registered!\nPlan type: ${plan_type}`);
+    };
+}
+
+app.get("/redirect/full", get_redirect_func('full'));
+app.get("/redirect/lite", get_redirect_func('lite'));
 
 app.get("/unregister", async function (req, res) {
     if (req.query.id) {
