@@ -56,3 +56,4 @@ for (var _i = 0, tests_1 = tests; _i < tests_1.length; _i++) {
     var test = tests_1[_i];
     console.log(test[0], test[1], substring_distance(test[0], test[1]));
 }
+module.exports = { substring_distance: substring_distance };
