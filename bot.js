@@ -54,7 +54,8 @@ async function create_worker(id) {
         similarity += substring_distance('buyfollowersprimesandviewers', noramlized);
         if (similarity <= 3) {
             console.log('detected bot:', channel, user, message);
-            chatClient.ban(channel, user, 'big follows bot');
+            ChatClient.timeout(channel, user, 24 * 3600, 'big follows bot');
+            // chatClient.ban(channel, user, 'big follows bot');
         }
     });
     return chatClient;
