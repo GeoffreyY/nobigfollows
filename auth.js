@@ -70,12 +70,16 @@ app.get("/redirect", async function (req, res) {
 app.get("/unregister", async function (req, res) {
     if (req.query.id) {
         const id = parseInt(req.query.id, 10);
+        const db_client = await db_pool.connect();
+        const db_res = await db_client.query("DELETE FROM access_tokens WHERE twitch_id = $1", [id]);
+        db_client.release();
         redis_client.publish("kill", id);
         res.send(`twich channel with id ${id} have been unregistered`)
     } else if (req.query.name) {
-        var name = req.query.name;
+        const name = req.query.name;
         const db_client = await db_pool.connect();
-        const db_res = await db_client.query("SELECT twitch_id FROM access_tokens WHERE twitch_name = $1", [name]);
+        const db_res = await db_client.query("DELETE FROM access_tokens WHERE twitch_name = $1 RETURNING twitch_id", [name]);
+        db_client.release();
         if (db_res.rows.length === 0) {
             res.send("cannot find name")
         } else {
@@ -83,7 +87,6 @@ app.get("/unregister", async function (req, res) {
             redis_client.publish("kill", id);
             res.send(`${name} have been unregistered`);
         }
-        db_client.release();
     }
 })
 
