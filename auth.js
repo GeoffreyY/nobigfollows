@@ -26,7 +26,15 @@ app.get("/", function (req, res) {
 });
 
 app.get("/register", function (req, res) {
-    res.redirect('/register/full');
+    res.send(`<div>Select plan type:</div>
+    <form action="/register/full" method="get">
+        Purges the bot when detected, but required channel moderator permission.
+        <button type="submit">Full</button>
+    </form>
+    <form action="/register/lite" method="get">
+        Doesn't require channel moderator permissions, but doesn't take action against the bot, only comments that it's a bot. Used to test the functionality of this anti-bot bot.
+        <button type="submit">Lite</button>
+    </form>`);
 });
 
 app.get("/register/full", function (req, res) {
