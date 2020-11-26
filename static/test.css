@@ -1,0 +1,13 @@
+body {
+    background-color: #36393f;
+    color: #ffffff;
+}
+div {
+    background-color: #202225;
+}
+.padding {
+    background-color: #36393f;
+}
+.with-border {
+    border: 1px solid black;
+}

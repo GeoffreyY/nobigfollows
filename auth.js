@@ -14,12 +14,11 @@ const db_pool = new Pool({
 const redis = require("redis");
 const redis_url = process.env.REDIS_URL;
 const redis_client = redis.createClient(redis_url);
+const { v4: uuidv4 } = require('uuid');
 
 const twitch_client_id = process.env.TWITCH_CLIENT_ID;
 const twitch_client_secret = process.env.TWITCH_CLIENT_SECRET;
 const domain = process.env.DOMAIN || "http://localhost:5000";
-
-const { v4: uuidv4 } = require('uuid');
 
 app.use(express.static('static'));
 
@@ -52,6 +51,7 @@ function get_redirect_func(plan_type) {
             res.send("Invalid request.");
             return;
         }
+        // I hate callback
         redis_client.get(state, async (err, reply) => {
             if (err) {
                 console.error(err);
@@ -121,6 +121,7 @@ app.get("/unregister/confirm", async function (req, res) {
         res.send("Invalid request.");
         return;
     }
+    // why callback :/
     redis_client.get(state, async (err, reply) => {
         if (err) {
             console.error(err);
