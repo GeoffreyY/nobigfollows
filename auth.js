@@ -48,6 +48,9 @@ app.get("/register/lite", function (req, res) {
 });
 
 function get_redirect_func(plan_type) {
+    // generates a redirect function for each registration plan
+    // depending on the plan type, database access, redirect link, and rendered page are different.
+    // otherwise all other code are the same
     return async function (req, res) {
         const state = req.query.state;
         if (!state) {
@@ -55,9 +58,11 @@ function get_redirect_func(plan_type) {
             return;
         }
         // I hate callback
+        // TODO: can I use async or something instead of putting 99% of my function into this callback?
         redis_client.get(state, async (err, reply) => {
             if (err) {
                 console.error(err);
+                res.render('error', { error: err });
                 return;
             }
             console.log(state, reply);
@@ -99,14 +104,14 @@ function get_redirect_func(plan_type) {
 
             var expiry = new Date();
             expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
-            // console.log([user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
+            // TODO: this line is way too long
             await db_pool.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type]).catch(err => console.error(err));
 
+            // launch a new twitch chat client for the user
             redis_client.publish("launch", user_data.id);
 
             res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
         })
-
     };
 }
 
