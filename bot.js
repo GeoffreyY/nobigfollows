@@ -58,7 +58,7 @@ async function create_worker(id) {
                 chatClient.purge(channel, user, 'big follows bot');
                 // chatClient.ban(channel, user, 'big follows bot');
             } else if (plan_type == 'lite') {
-                chatClient.say(channel, "^ that is a spam / scam bot, < I'm a bot too")
+                chatClient.say(channel, "^ that's a scam bot < I'm a bot too")
             }
         }
     });
