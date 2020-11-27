@@ -4,7 +4,6 @@ const clientId = process.env.TWITCH_CLIENT_ID;
 const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 
 const { Pool } = require('pg');
-//const { workers } = require('cluster');
 const database_url = process.env.DATABASE_URL;
 const db_pool = new Pool({
     connectionString: database_url,
@@ -19,6 +18,7 @@ const redis_client = redis.createClient(redis_url);
 
 const { substring_distance } = require('./lib.js');
 
+// Here's the actual main function!
 async function create_worker(id) {
     var response = await db_pool.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [id]);
     if (response.rows.length === 0) {
@@ -45,6 +45,7 @@ async function create_worker(id) {
         if (message === '>>> ping?') {
             chatClient.say(channel, '<<< Pong!');
         }
+        // Here's the actual code for message comparison
         const noramlized = message.normalize("NFD").split('').filter(c => c.match(/[a-zA-Z]/)).join('').toLowerCase();
         var similarity = substring_distance('bigfollowscom', noramlized);
         similarity += substring_distance('buyfollowersprimesandviewers', noramlized);
