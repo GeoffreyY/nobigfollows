@@ -15,19 +15,23 @@ const redis = require("redis");
 const redis_url = process.env.REDIS_URL;
 const redis_client = redis.createClient(redis_url);
 const { v4: uuidv4 } = require('uuid');
+const { user } = require("pg/lib/defaults");
 
 const twitch_client_id = process.env.TWITCH_CLIENT_ID;
 const twitch_client_secret = process.env.TWITCH_CLIENT_SECRET;
 const domain = process.env.DOMAIN || "http://localhost:5000";
 
+//const pug = require('pug');
+
+app.set('view engine', 'pug')
 app.use(express.static('static'));
 
 app.get("/", function (req, res) {
-    res.send(`Hello World!`);
+    res.render(`index`, { title: 'Main Page' });
 });
 
 app.get("/register", function (req, res) {
-    res.sendFile("register.html", { root: 'static' });
+    res.render("register", { title: 'Register' });
 });
 
 app.get("/register/full", function (req, res) {
@@ -48,7 +52,7 @@ function get_redirect_func(plan_type) {
     return async function (req, res) {
         const state = req.query.state;
         if (!state) {
-            res.send("Invalid request.");
+            res.render('error', { error: "Invalid request." });
             return;
         }
         // I hate callback
@@ -59,7 +63,7 @@ function get_redirect_func(plan_type) {
             }
             console.log(state, reply);
             if (reply === null) {
-                res.send('Invalid state. Probably the code expired. Try unregistering again.')
+                res.render('error', { error: 'Invalid state. Probably the code expired. Try unregistering again.' });
                 return;
             }
 
@@ -76,6 +80,10 @@ function get_redirect_func(plan_type) {
                         "redirect_uri": `${domain}/redirect/full`
                     }
                 }).then(r => r.data).catch(err => console.error(err));
+            if (token_data === undefined) {
+                res.render('error', { error: "Authentication cancelled?" });
+                return;
+            }
             console.log(token_data);
             const user_data = await axios.get("https://api.twitch.tv/helix/users?",
                 {
@@ -99,7 +107,7 @@ function get_redirect_func(plan_type) {
 
             redis_client.publish("launch", user_data.id);
 
-            res.send(`${user_data.display_name}, you have been registered!\nPlan type: ${plan_type}`);
+            res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
         })
 
     };
@@ -118,18 +126,19 @@ app.get("/unregister", async function (req, res) {
 app.get("/unregister/confirm", async function (req, res) {
     const state = req.query.state;
     if (!state) {
-        res.send("Invalid request.");
+        res.render('error', { error: "Invalid request." });
         return;
     }
     // why callback :/
     redis_client.get(state, async (err, reply) => {
         if (err) {
             console.error(err);
+            res.render('error', { error: err });
             return;
         }
         console.log(state, reply);
         if (reply === null) {
-            res.send('Invalid state. Probably the code expired. Try unregistering again.')
+            res.render('error', { error: 'Invalid state. Probably the code expired. Try unregistering again.' });
             return;
         }
 
@@ -146,6 +155,10 @@ app.get("/unregister/confirm", async function (req, res) {
                     "redirect_uri": `${domain}/unregister/confirm`
                 }
             }).then(r => r.data).catch(err => console.error(err));
+        if (token_data === undefined) {
+            res.render('error', { error: "Authentication cancelled?" });
+            return;
+        }
         console.log(token_data);
         const user_data = await axios.get("https://api.twitch.tv/helix/users?",
             {
@@ -163,7 +176,7 @@ app.get("/unregister/confirm", async function (req, res) {
         const db_res = await db_client.query("DELETE FROM access_tokens WHERE twitch_id = $1", [user_id]);
         db_client.release();
         redis_client.publish("kill", user_id);
-        res.send(`${user_data.display_name} (id ${user_id}), you have been unregistered.`);
+        res.render('unregister_finished', { username: user_data.display_name })
     });
 
 })

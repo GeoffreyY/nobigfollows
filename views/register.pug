@@ -1,0 +1,10 @@
+extends template.pug
+
+block main-content
+    h4 Please select plan type:
+    form.pt-2#full-form(action="/register/full", method="get")
+        button.btn.btn-primary.btn-sm(type="submit") Full
+        div#full-plan-description Purges the bot when detected, but required channel moderator permission.
+    form#lite-form(action="/register/lite", method="get")
+        button.btn.btn-primary.btn-sm(type="submit") Lite
+        div#lite-plan-description Doesn't require channel moderator permissions, but doesn't actually take action against the bot, only comments that "it's a bot". Used to test the functionality of this anti-bot bot.
