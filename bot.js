@@ -20,13 +20,11 @@ const redis_client = redis.createClient(redis_url);
 const { substring_distance } = require('./lib.js');
 
 async function create_worker(id) {
-    const db_client = await db_pool.connect();
-    var response = await db_client.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [id]);
+    var response = await db_pool.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [id]);
     if (response.rows.length === 0) {
         return;
     }
     const { twitch_name, access_token: accessToken, refresh_token: refreshToken, expiry, plan_type } = response.rows[0];
-    db_client.release();
 
     const auth = new RefreshableAuthProvider(
         new StaticAuthProvider(clientId, accessToken),
@@ -35,9 +33,7 @@ async function create_worker(id) {
             refreshToken: refreshToken,
             expiry: expiry,
             onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
-                const db_client = await db_pool.connect();
-                await db_client.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3 WHERE twitch_id = $4", [accessToken, refreshToken, expiryDate, id])
-                db_client.release();
+                await db_pool.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3 WHERE twitch_id = $4", [accessToken, refreshToken, expiryDate, id])
             }
         }
     );
@@ -68,9 +64,7 @@ async function create_worker(id) {
 var workers = {};
 
 async function main() {
-    const db_client = await db_pool.connect();
-    var twitch_ids = await db_client.query('SELECT twitch_id FROM access_tokens');
-    db_client.release();
+    var twitch_ids = await db_pool.query('SELECT twitch_id FROM access_tokens');
 
     const redis_client_pub = redis.createClient(redis_url);
     for (row_dict of twitch_ids.rows) {

@@ -98,12 +98,10 @@ function get_redirect_func(plan_type) {
             console.log(user_data);
             user_data.id = parseInt(user_data.id, 10);
 
-            const db_client = await db_pool.connect();
             var expiry = new Date();
             expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
             // console.log([user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry]);
-            await db_client.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type]);
-            db_client.release();
+            await db_pool.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type]).catch(err => console.error(err));
 
             redis_client.publish("launch", user_data.id);
 
@@ -172,9 +170,7 @@ app.get("/unregister/confirm", async function (req, res) {
             .catch(err => console.error(err));
         console.log(user_data);
         const user_id = parseInt(user_data.id, 10);
-        const db_client = await db_pool.connect();
-        const db_res = await db_client.query("DELETE FROM access_tokens WHERE twitch_id = $1", [user_id]);
-        db_client.release();
+        const db_res = await db_pool.query("DELETE FROM access_tokens WHERE twitch_id = $1", [user_id]).catch(err => console.error(err));
         redis_client.publish("kill", user_id);
         res.render('unregister_finished', { username: user_data.display_name })
     });
