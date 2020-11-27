@@ -63,7 +63,7 @@ function get_redirect_func(plan_type) {
         const redis_get = promisify(redis_client.get).bind(redis_client);
         const state_storage = await redis_get(state).catch(err => { console.error(err); });
         if (state_storage === null) {
-            res.render('error', { error: 'Invalid state. Probably the code expired. Try unregistering again.' });
+            res.render('error', { error: 'Invalid state. Probably the code expired. Try registering again.' });
             return;
         }
         console.log('state', state, state_storage);
