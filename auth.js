@@ -15,7 +15,6 @@ const redis = require("redis");
 const redis_url = process.env.REDIS_URL;
 const redis_client = redis.createClient(redis_url);
 const { v4: uuidv4 } = require('uuid');
-const { user } = require("pg/lib/defaults");
 
 const twitch_client_id = process.env.TWITCH_CLIENT_ID;
 const twitch_client_secret = process.env.TWITCH_CLIENT_SECRET;
