@@ -6,6 +6,10 @@ https://nobigfollowstwitchbot.herokuapp.com/register/
 
 To unregister the bot from your channel, visit [here](https://nobigfollowstwitchbot.herokuapp.com/register/).
 
+To upgrade / change plans, just register again.
+
+Whenever you register, a new access code is generated and stored against your twitch id, and overwrites any old access code that was stored against your twitch id. When a bot (app?) instance is launched, any old instances assigned to the same twitch id is killed.
+
 ## How it works
 
 Note: This is subject to change, look at the source code in bot.js for the actual behaviour.
