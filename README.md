@@ -12,7 +12,7 @@ Whenever you register, a new access code is generated and stored against your tw
 
 ## How it works
 
-Note: This is subject to change, look at the source code in bot.js for the actual behaviour.
+Note: This is subject to change, look at the source code in bot.js for the actual behaviour, [see here](https://github.com/GeoffreyY/nobigfollows/blob/7813bc52ae9666595c32084a5ac2ca555c628dbb/bot.js#L48).
 
 Currently, this bot looks for messages that has the phrase "bigfollows.com" and "Buy followers, primes, and viewers", and timeouts the user if the message contains both phrases.
 
