@@ -57,6 +57,7 @@ async function create_worker(twitch_id) {
             } else if (plan_type == 'lite') {
                 chatClient.say(channel, "^ that's a scam bot < I'm a bot too").catch(err => console.error(err));
             }
+            // I use twitch id = 0 for "total", because there's probably nobody with twitch id 0, and I'm too lazy to make a new table or something for total
             await db_pool.query("UPDATE stats SET bots_detected = bots_detected + 1 WHERE twitch_id = 0 OR twitch_id = $1", [twitch_id]);
         }
     });
