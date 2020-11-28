@@ -65,11 +65,11 @@ async function create_worker(id) {
 var workers = {};
 
 async function main() {
-    var twitch_ids = await db_pool.query('SELECT twitch_id FROM access_tokens');
-
+    // when starting from crash / down, we have to launch all the old clients
     const redis_client_pub = redis.createClient(redis_url);
+    const twitch_ids = await db_pool.query('SELECT twitch_id FROM access_tokens');
     for (row_dict of twitch_ids.rows) {
-        var id = row_dict.twitch_id;
+        const id = row_dict.twitch_id;
         redis_client_pub.publish("launch", id);
     }
     redis_client_pub.quit();
