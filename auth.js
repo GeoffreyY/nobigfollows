@@ -112,19 +112,23 @@ function get_redirect_func(plan_type) {
 
         res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
     };
-}
+};
 
 app.get("/redirect/full", get_redirect_func('full'));
 app.get("/redirect/lite", get_redirect_func('lite'));
 
 app.get("/unregister", async function (req, res) {
+    res.render("unregister", { title: "Unregister" })
+});
+
+app.get("/unregister/authorize", async function (req, res) {
     console.log('Redirecting to unregister...');
     const state = uuidv4();
     redis_client.set(state, 1, 'EX', 5 * 60);
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/unregister/confirm&response_type=code&scope=&force_verify=true&state=${state}`);
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/unregister&response_type=code&scope=&force_verify=true&state=${state}`);
 })
 
-app.get("/unregister/confirm", async function (req, res) {
+app.get("/redirect/unregister", async function (req, res) {
     // check state exists in redis, for anti-csrf
     const state = req.query.state;
     if (!state) {
@@ -177,7 +181,7 @@ app.get("/unregister/confirm", async function (req, res) {
 
     redis_client.publish("kill", user_id);
     res.render('unregister_finished', { username: user_data.display_name })
-})
+});
 
 var port = process.env.PORT || 5000;
 app.listen(port,
