@@ -28,7 +28,7 @@ app.set('view engine', 'pug')
 app.use(express.static('static'));
 
 app.get("/", function (req, res) {
-    res.render(`index`, { title: 'Main Page' });
+    res.render(`index`, { title: 'No Big Follows' });
 });
 
 app.get("/register", function (req, res) {
