@@ -106,6 +106,7 @@ function get_redirect_func(plan_type) {
         expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
         // TODO: this line is way too long
         await db_pool.query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6", [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type]).catch(err => console.error(err));
+        await db_pool.query("INSERT INTO stats VALUES ($1) ON CONFLICT (twitch_id) DO NOTHING", [user_data.id]);
 
         // launch a new twitch chat client for the user
         redis_client.publish("launch", user_data.id);

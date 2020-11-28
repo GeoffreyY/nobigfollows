@@ -19,8 +19,8 @@ const redis_client = redis.createClient(redis_url);
 const { substring_distance } = require('./lib.js');
 
 // Here's the actual main function!
-async function create_worker(id) {
-    var response = await db_pool.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [id]);
+async function create_worker(twitch_id) {
+    var response = await db_pool.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [twitch_id]);
     if (response.rows.length === 0) {
         return;
     }
@@ -33,7 +33,7 @@ async function create_worker(id) {
             refreshToken: refreshToken,
             expiry: expiry,
             onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
-                await db_pool.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3 WHERE twitch_id = $4", [accessToken, refreshToken, expiryDate, id])
+                await db_pool.query("UPDATE access_tokens SET access_token = $1, refresh_token = $2, expiry = $3 WHERE twitch_id = $4", [accessToken, refreshToken, expiryDate, twitch_id])
             }
         }
     );
@@ -41,7 +41,7 @@ async function create_worker(id) {
     const chatClient = new ChatClient(auth, { channels: [twitch_name] });
     await chatClient.connect();
 
-    chatClient.onMessage((channel, user, message) => {
+    chatClient.onMessage(async (channel, user, message) => {
         if (message === '>>> ping?') {
             chatClient.say(channel, '<<< Pong!');
         }
@@ -52,11 +52,12 @@ async function create_worker(id) {
         if (similarity <= 3) {
             console.log('detected bot:', channel, user, message);
             if (plan_type == 'full') {
-                chatClient.purge(channel, user, 'big follows bot');
+                chatClient.purge(channel, user, 'big follows bot').catch(err => console.error(err));
                 // chatClient.ban(channel, user, 'big follows bot');
             } else if (plan_type == 'lite') {
-                chatClient.say(channel, "^ that's a scam bot < I'm a bot too")
+                chatClient.say(channel, "^ that's a scam bot < I'm a bot too").catch(err => console.error(err));
             }
+            await db_pool.query("UPDATE stats SET bots_detected = bots_detected + 1 WHERE twitch_id = 0 OR twitch_id = $1", [twitch_id]);
         }
     });
     return chatClient;
