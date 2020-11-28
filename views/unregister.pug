@@ -1,0 +1,6 @@
+extends template.pug
+
+block main-content
+    div Click here to unregister:
+        form.pt-2.mb-2#full-form(action="/unregister/authorize", method="get")
+            button.btn.btn-primary.btn-sm(type="submit") Unregister
