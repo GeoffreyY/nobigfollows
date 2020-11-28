@@ -79,7 +79,7 @@ function get_redirect_func(plan_type) {
                     "client_secret": twitch_client_secret,
                     "code": code,
                     "grant_type": "authorization_code",
-                    "redirect_uri": `${domain}/redirect/full`
+                    "redirect_uri": `${domain}/redirect/${plan_type}`
                 }
             }).then(r => r.data).catch(err => console.error(err));
         if (token_data === undefined) {
@@ -155,7 +155,7 @@ app.get("/redirect/unregister", async function (req, res) {
                 "client_secret": twitch_client_secret,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": `${domain}/unregister/confirm`
+                "redirect_uri": `${domain}/redirect/unregister`
             }
         }).then(r => r.data).catch(err => console.error(err));
     if (token_data === undefined) {
@@ -182,6 +182,79 @@ app.get("/redirect/unregister", async function (req, res) {
 
     redis_client.publish("kill", user_id);
     res.render('unregister_finished', { username: user_data.display_name })
+});
+
+app.get("/profile/redirect", async function (req, res) {
+    console.log('Redirecting to profile...');
+    const state = uuidv4();
+    redis_client.set(state, 1, 'EX', 5 * 60);
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/profile&response_type=code&scope=&force_verify=true&state=${state}`);
+});
+
+app.get("/profile", async function (req, res) {
+    // TODO: this is a lot of code diplication, but I need to res.render() and return on error path though...
+    const state = req.query.state;
+    if (!state) {
+        res.render('error', { error: "Invalid request." });
+        return;
+    }
+    const redis_get = promisify(redis_client.get).bind(redis_client);
+    const state_storage = await redis_get(state).catch(err => { console.error(err); });
+    if (state_storage === null) {
+        res.render('error', { error: 'Invalid state. Probably the code expired. Try unregistering again.' });
+        return;
+    }
+    console.log('state', state, state_storage);
+    redis_client.del(state);
+
+    // request user authentication
+    const code = req.query.code;
+    console.log('unregistering - received code:', code);
+    const token_data = await axios.post("https://id.twitch.tv/oauth2/token", null,
+        {
+            params: {
+                "client_id": twitch_client_id,
+                "client_secret": twitch_client_secret,
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": `${domain}/profile`
+            }
+        }).then(r => r.data).catch(err => console.error(err));
+    if (token_data === undefined) {
+        res.render('error', { error: "Authentication cancelled?" });
+        return;
+    }
+    console.log(token_data);
+
+    // get user data (username, twitch id) using access_token
+    const user_data = await axios.get("https://api.twitch.tv/helix/users?",
+        {
+            headers: {
+                "Authorization": `Bearer ${token_data['access_token']}`,
+                "Client-Id": twitch_client_id
+            }
+        })
+        .then(r => r.data)
+        .then(r => r.data[0])
+        .catch(err => console.error(err));
+    console.log(user_data);
+
+    const user_id = parseInt(user_data.id, 10);
+    const db_res = await db_pool.query("SELECT bots_detected FROM stats WHERE twitch_id = $1", [user_id]).catch(err => console.error(err));
+    if (db_res.rows.length === 0) {
+        var bots_detected = 0;
+    } else {
+        var { bots_detected } = db_res.rows[0];
+    }
+    const access_token_res = await db_pool.query("SELECT access_token FROM access_tokens WHERE twitch_id = $1", [user_id]).catch(err => console.error(err));
+    if (access_token_res.rows.length === 0) {
+        // it's probably already null if I don't write this, but it's javascript so better safe than sorry
+        var access_token = null;
+    } else {
+        var { access_token } = access_token_res.rows[0];
+    }
+
+    res.render("profile", { title: user_data.display_name, bots_detected, access_token });
 });
 
 var port = process.env.PORT || 5000;
