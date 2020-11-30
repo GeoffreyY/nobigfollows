@@ -32,7 +32,7 @@ async function validate_csrf_state(state) {
     const state_storage = await redis_get(state)
         .catch(err => { console.error(err); throw new Error('Invalid state, probably expired. Try registering again.') });
     console.log('state', state, state_storage);
-    // state should be reused
+    // state should not be reused
     redis_client.del(state);
 }
 
