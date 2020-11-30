@@ -66,6 +66,15 @@ async function get_user_data(access_token) {
         .then(user_data => { user_data.id = parseInt(user_data.id, 10); return user_data })
 }
 
+const STATE_TIMEOUT = 5 * 60; // 5 minutes
+function generate_state() {
+    // generate anti-csrf "state" passed to twitch when authorizing w/ oauth
+    // ths state is echoed back, and we should check that the returned state is valid
+    const state = uuidv4();
+    redis_client.set(state, 1, 'EX', STATE_TIMEOUT);
+    return state;
+}
+
 // main code here 
 app.set('view engine', 'pug')
 app.use(express.static('static'));
@@ -80,15 +89,13 @@ app.get("/register", function (req, res) {
 
 app.get("/register/full", function (req, res) {
     console.log('Redirecting to register full...');
-    const state = uuidv4();
-    redis_client.set(state, 1, 'EX', 5 * 60);
+    const state = generate_state();
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/full&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
 });
 
 app.get("/register/lite", function (req, res) {
     console.log('Redirecting to register lite...');
-    const state = uuidv4();
-    redis_client.set(state, 1, 'EX', 5 * 60);
+    const state = generate_state();
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/lite&response_type=code&scope=chat:read+chat:edit&state=${state}`);
 });
 
@@ -126,7 +133,6 @@ function get_redirect_func(plan_type) {
             res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
         } catch (err) {
             res.render("error", { error: err })
-            return;
         }
     };
 };
@@ -140,8 +146,7 @@ app.get("/unregister", async function (req, res) {
 
 app.get("/unregister/authorize", async function (req, res) {
     console.log('Redirecting to unregister...');
-    const state = uuidv4();
-    redis_client.set(state, 1, 'EX', 5 * 60);
+    const state = generate_state();
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/unregister&response_type=code&scope=&force_verify=true&state=${state}`);
 })
 
