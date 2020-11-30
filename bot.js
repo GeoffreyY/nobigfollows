@@ -66,8 +66,8 @@ async function create_worker(twitch_id) {
 
 var workers = {};
 
-async function main() {
-    // when starting from crash / down, we have to launch all the old clients
+async function restart_app() {
+    // when restarting the app from a previous crash, we have to relaunch all the old clients
     const redis_client_pub = redis.createClient(redis_url);
     const twitch_ids = await db_pool.query('SELECT twitch_id FROM access_tokens');
     for (row_dict of twitch_ids.rows) {
@@ -98,4 +98,4 @@ redis_client.on("message", async (channel, message) => {
 redis_client.subscribe("launch");
 redis_client.subscribe("kill");
 
-main();
+restart_app();
