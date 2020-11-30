@@ -22,7 +22,7 @@ const domain = process.env.DOMAIN || "http://localhost:5000";
 
 const { promisify } = require('util');
 
-// helper functions here
+// ========== helper functions here ==========
 async function validate_csrf_state(state) {
     if (!state) {
         throw new Error('Invalid request.')
@@ -68,23 +68,23 @@ async function get_user_data(access_token) {
 
 const STATE_TIMEOUT = 5 * 60; // 5 minutes
 function generate_state() {
-    // generate anti-csrf "state" passed to twitch when authorizing w/ oauth
+    // generate a random anti-csrf "state", that's passed to twitch when authorizing w/ oauth
     // ths state is echoed back, and we should check that the returned state is valid
     const state = uuidv4();
     redis_client.set(state, 1, 'EX', STATE_TIMEOUT);
     return state;
 }
 
-// main code here 
+// ========== main code here ==========
 app.set('view engine', 'pug')
 app.use(express.static('static'));
 
 app.get("/", function (req, res) {
-    res.render(`index`, { title: 'No Big Follows' });
+    res.render(`index`);
 });
 
 app.get("/register", function (req, res) {
-    res.render("register", { title: 'Register' });
+    res.render("register");
 });
 
 app.get("/register/full", function (req, res) {
@@ -141,7 +141,7 @@ app.get("/redirect/full", get_redirect_func('full'));
 app.get("/redirect/lite", get_redirect_func('lite'));
 
 app.get("/unregister", async function (req, res) {
-    res.render("unregister", { title: "Unregister" })
+    res.render("unregister")
 });
 
 app.get("/unregister/authorize", async function (req, res) {
@@ -178,8 +178,7 @@ app.get("/redirect/unregister", async function (req, res) {
 
 app.get("/profile/redirect", async function (req, res) {
     console.log('Redirecting to profile...');
-    const state = uuidv4();
-    redis_client.set(state, 1, 'EX', 5 * 60);
+    const state = generate_state();
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/profile&response_type=code&scope=&force_verify=true&state=${state}`);
 });
 

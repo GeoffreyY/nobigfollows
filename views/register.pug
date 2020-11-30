@@ -1,5 +1,8 @@
 extends template.pug
 
+block variables
+    -var title = 'Register'
+
 block main-content
     h4 Please select plan type:
     form.pt-2#full-form(action="/register/full", method="get").row.mb-2

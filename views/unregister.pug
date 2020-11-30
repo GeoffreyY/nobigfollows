@@ -1,5 +1,8 @@
 extends template.pug
 
+block variables
+    -var title = 'Unregister'
+
 block main-content
     div Click here to unregister:
         form.pt-2.mb-2#full-form(action="/unregister/authorize", method="get")
