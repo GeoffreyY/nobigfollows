@@ -80,9 +80,9 @@ async function create_worker(twitch_id) {
                 // so in case our anti-bot failed and detect real people as bot,
                 // we only purge them and the broadcaster doesn't need to unban them
                 // chatClient.ban(channel, user, 'big follows bot');
-                chatClient.purge(channel, user, 'big follows bot').catch(err => console.error(err));
+                await chatClient.purge(channel, user, 'big follows bot').catch(err => console.error(err));
             } else if (plan_type == 'lite') {
-                chatClient.say(channel, "^ that's a scam bot < I'm a bot too").catch(err => console.error(err));
+                chatClient.say(channel, "^ that's a scam bot < I'm a bot too");
             }
             // I use twitch id = 0 for "total", because there's probably nobody with twitch id 0
             // and I'm too lazy to make a new table or something for the total
