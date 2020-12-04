@@ -23,6 +23,15 @@ const domain = process.env.DOMAIN || "http://localhost:5000";
 const { promisify } = require('util');
 
 // ========== helper functions here ==========
+const STATE_TIMEOUT = 5 * 60; // 5 minutes
+function generate_state(payload = '') {
+    // generate a random anti-csrf "state", that's passed to twitch when authorizing user w/ oauth
+    // ths state is echoed back, and we should check that the returned state is valid
+    const state = uuidv4();
+    redis_client.set(state, payload, 'EX', STATE_TIMEOUT);
+    return state;
+}
+
 async function validate_csrf_state(state) {
     if (!state) {
         throw new Error('Invalid request.')
@@ -65,15 +74,6 @@ async function get_user_data(access_token) {
         .then(r => { if ('data' in r) { return r.data } else { throw new Error(r.error) } })
         .then(d => d.data[0])
         .then(user_data => { user_data.id = parseInt(user_data.id, 10); return user_data })
-}
-
-const STATE_TIMEOUT = 5 * 60; // 5 minutes
-function generate_state(payload = '') {
-    // generate a random anti-csrf "state", that's passed to twitch when authorizing user w/ oauth
-    // ths state is echoed back, and we should check that the returned state is valid
-    const state = uuidv4();
-    redis_client.set(state, payload, 'EX', STATE_TIMEOUT);
-    return state;
 }
 
 // ========== main code here ==========
