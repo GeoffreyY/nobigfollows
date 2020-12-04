@@ -220,6 +220,4 @@ app.get("/profile", async function (req, res) {
     }
 });
 
-var port = process.env.PORT || 5000;
-app.listen(port,
-    () => console.log(`Auth server is running at port ${port}...`));
+module.exports = { app };

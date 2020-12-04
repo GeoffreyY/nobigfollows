@@ -132,4 +132,4 @@ redis_client.on("message", async (channel, message) => {
 redis_client.subscribe("launch");
 redis_client.subscribe("kill");
 
-restart_app();
+module.exports = { redis_client, restart_app }
