@@ -113,7 +113,7 @@ async function relaunch_clients() {
 // we listen for commands, to either launch a new chat client, or kill an old chat client
 // commands and exchanged (sent and received) via redis
 redis_client.on("message", async (channel, message) => {
-    console.log(channel, message);
+    console.log('redis command:', channel, message);
     if (channel == "launch") {
         // remove old worker if it existed
         if (message in workers) {
