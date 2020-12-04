@@ -62,17 +62,15 @@ Create a twtich application at https://dev.twitch.tv/console/apps/create, then g
 
 3. Add the following redirect urls for your twitch app, replacing $DOMAIN with your heroku app domain:
 
-- $DOMAIN/redirect/full
-
-- $DOMAIN/redirect/lite
+- $DOMAIN/redirect/register
 
 - $DOMAIN/redirect/unregister
 
 - $DOMAIN/profile
 
-For example, I have `https://nobigfollowstwitchbot.herokuapp.com/redirect/full`, `https://nobigfollowstwitchbot.herokuapp.com/redirect/lite` etc.
+For example, I have `https://nobigfollowstwitchbot.herokuapp.com/redirect/register` etc.
 
-In order to test locally, I also have `http://localhost:5000/redirect/full`, `http://localhost:5000/redirect/lite` etc., a total of 8 redirect urls.
+In order to test locally, I also have `http://localhost:5000/redirect/register` etc., a total of 6 redirect urls.
 
 NOTE: This is subject to change, I'll find a better method that doesn't need so many redirect urls if I have time.
 

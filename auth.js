@@ -29,11 +29,12 @@ async function validate_csrf_state(state) {
     }
     // check whether state exists in redis
     const redis_get = promisify(redis_client.get).bind(redis_client);
-    const state_storage = await redis_get(state)
-        .catch(err => { console.error(err); throw new Error('Invalid state, probably expired. Try registering again.') });
-    console.log('state', state, state_storage);
+    const stored_value = await redis_get(state)
+        .catch(err => { console.error(err); throw new Error('Invalid state, probably expired. Please retry.') });
+    console.log('state', state, stored_value);
     // state should not be reused
     redis_client.del(state);
+    return stored_value;
 }
 
 async function get_access_code(code, redirect_uri) {
@@ -67,11 +68,11 @@ async function get_user_data(access_token) {
 }
 
 const STATE_TIMEOUT = 5 * 60; // 5 minutes
-function generate_state() {
-    // generate a random anti-csrf "state", that's passed to twitch when authorizing w/ oauth
+function generate_state(payload = '') {
+    // generate a random anti-csrf "state", that's passed to twitch when authorizing user w/ oauth
     // ths state is echoed back, and we should check that the returned state is valid
     const state = uuidv4();
-    redis_client.set(state, 1, 'EX', STATE_TIMEOUT);
+    redis_client.set(state, payload, 'EX', STATE_TIMEOUT);
     return state;
 }
 
@@ -89,63 +90,54 @@ app.get("/register", function (req, res) {
 
 app.get("/register/full", function (req, res) {
     console.log('Redirecting to register full...');
-    const state = generate_state();
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/full&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
+    const state = generate_state('full');
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/register&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
 });
 
 app.get("/register/strict", function (req, res) {
     console.log('Redirecting to register strict...');
-    const state = generate_state();
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/strict&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
+    const state = generate_state('strict');
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/register&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
 });
 
 app.get("/register/lite", function (req, res) {
     console.log('Redirecting to register lite...');
-    const state = generate_state();
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/lite&response_type=code&scope=chat:read+chat:edit&state=${state}`);
+    const state = generate_state('lite');
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/register&response_type=code&scope=chat:read+chat:edit&state=${state}`);
 });
 
-function get_redirect_func(plan_type) {
-    // generates a redirect function for each registration plan
-    // depending on the plan type, database access, redirect link, and rendered page are different.
-    // otherwise all other code are the same
-    return async function (req, res) {
-        try {
-            const state = req.query.state;
-            await validate_csrf_state(state);
+app.get("/redirect/register", async function (req, res) {
+    try {
+        const state = req.query.state;
+        const plan_type = await validate_csrf_state(state);
 
-            // request user authentication
-            const code = req.query.code;
-            console.log(`registering ${plan_type} - received code: ${code}`);
-            const token_data = await get_access_code(code, `${domain}/redirect/${plan_type}`);
-            console.log(token_data);
+        // request user authentication
+        const code = req.query.code;
+        console.log(`registering ${plan_type} - received code: ${code}`);
+        const token_data = await get_access_code(code, `${domain}/redirect/register`);
+        console.log(token_data);
 
-            const user_data = await get_user_data(token_data.access_token);
-            console.log(user_data);
+        const user_data = await get_user_data(token_data.access_token);
+        console.log(user_data);
 
-            var expiry = new Date();
-            expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
-            await db_pool
-                .query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6",
-                    [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type])
-                .catch(err => { console.error(err); throw new Error("couldn't insert access token into db") })
-            await db_pool
-                .query("INSERT INTO stats VALUES ($1) ON CONFLICT (twitch_id) DO NOTHING", [user_data.id])
-                .catch(err => { console.error(err); throw new Error("couldn't update stats in db") });
+        var expiry = new Date();
+        expiry.setSeconds(expiry.getSeconds() + token_data.expires_in);
+        await db_pool
+            .query("INSERT INTO access_tokens VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ON CONSTRAINT access_tokens_pkey DO UPDATE SET access_token = $3, refresh_token = $4, expiry = $5, plan_type = $6",
+                [user_data.id, user_data.login, token_data.access_token, token_data.refresh_token, expiry, plan_type])
+            .catch(err => { console.error(err); throw new Error("couldn't insert access token into db") })
+        await db_pool
+            .query("INSERT INTO stats VALUES ($1) ON CONFLICT (twitch_id) DO NOTHING", [user_data.id])
+            .catch(err => { console.error(err); throw new Error("couldn't update stats in db") });
 
-            // launch a new twitch chat client for the user
-            redis_client.publish("launch", user_data.id);
+        // launch a new twitch chat client for the user
+        redis_client.publish("launch", user_data.id);
 
-            res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
-        } catch (err) {
-            res.render("error", { error: err })
-        }
-    };
-};
-
-app.get("/redirect/full", get_redirect_func('full'));
-app.get("/redirect/strict", get_redirect_func('strict'));
-app.get("/redirect/lite", get_redirect_func('lite'));
+        res.render('register_finished', { username: user_data.display_name, plan_type: plan_type });
+    } catch (err) {
+        res.render("error", { error: err })
+    }
+});
 
 app.get("/unregister", async function (req, res) {
     res.render("unregister")
