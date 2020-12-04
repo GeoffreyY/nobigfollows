@@ -96,7 +96,7 @@ async function create_worker(twitch_id) {
 
 var workers = {};
 
-async function restart_app() {
+async function relaunch_clients() {
     // when restarting the app from a previous crash, we have to relaunch all the old clients
     const redis_client_pub = redis.createClient(redis_url);
     const twitch_ids = await db_pool.query('SELECT twitch_id FROM access_tokens');
@@ -132,4 +132,4 @@ redis_client.on("message", async (channel, message) => {
 redis_client.subscribe("launch");
 redis_client.subscribe("kill");
 
-module.exports = { redis_client, restart_app }
+module.exports = { redis_client, relaunch_clients }
