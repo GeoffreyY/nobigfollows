@@ -164,7 +164,7 @@ app.get("/redirect/unregister", async function (req, res) {
         const user_data = await get_user_data(token_data.access_token);
         console.log(user_data);
 
-        const db_res = await db_pool
+        await db_pool
             .query("DELETE FROM access_tokens WHERE twitch_id = $1", [user_data.id])
             .catch(err => { console.error(err); throw new Error("Couldn't delete your access code from the db, probably because we don't have one.") });
 
