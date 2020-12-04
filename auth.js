@@ -188,7 +188,7 @@ app.get("/profile", async function (req, res) {
 
         // request user authentication
         const code = req.query.code;
-        console.log('unregistering - received code:', code);
+        console.log('visiting profile - received code:', code);
         const token_data = await get_access_code(code, `${domain}/profile`);
         console.log(token_data);
 
