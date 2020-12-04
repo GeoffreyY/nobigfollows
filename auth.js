@@ -93,6 +93,12 @@ app.get("/register/full", function (req, res) {
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/full&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
 });
 
+app.get("/register/strict", function (req, res) {
+    console.log('Redirecting to register strict...');
+    const state = generate_state();
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${twitch_client_id}&redirect_uri=${domain}/redirect/strict&response_type=code&scope=chat:read+chat:edit+channel:moderate&state=${state}`);
+});
+
 app.get("/register/lite", function (req, res) {
     console.log('Redirecting to register lite...');
     const state = generate_state();
@@ -138,6 +144,7 @@ function get_redirect_func(plan_type) {
 };
 
 app.get("/redirect/full", get_redirect_func('full'));
+app.get("/redirect/strict", get_redirect_func('strict'));
 app.get("/redirect/lite", get_redirect_func('lite'));
 
 app.get("/unregister", async function (req, res) {
