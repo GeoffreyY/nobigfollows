@@ -198,7 +198,7 @@ app.get("/profile", async function (req, res) {
 
         const db_res = await db_pool
             .query("SELECT bots_detected FROM stats WHERE twitch_id = $1", [user_data.id])
-            .catch(err => { console.error(err); throw new Error("Couldn't fetch from stats page.") });
+            .catch(err => { console.error(err); throw new Error("Couldn't fetch from stats database.") });
         if (db_res.rows.length === 0) {
             var bots_detected = 0;
         } else {

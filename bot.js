@@ -49,6 +49,7 @@ async function create_worker(twitch_id) {
     // get access token and info for database
     var response = await db_pool.query('SELECT twitch_name, access_token, refresh_token, expiry, plan_type FROM access_tokens WHERE twitch_id = $1', [twitch_id]);
     if (response.rows.length === 0) {
+        console.error(`Attempting to create worker for twitch id ${twitch_id}, but we don't have an access code.`);
         return;
     }
     const { twitch_name, access_token: accessToken, refresh_token: refreshToken, expiry, plan_type } = response.rows[0];
