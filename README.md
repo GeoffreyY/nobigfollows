@@ -72,6 +72,4 @@ For example, I have `https://nobigfollowstwitchbot.herokuapp.com/redirect/regist
 
 In order to test locally, I also have `http://localhost:5000/redirect/register` etc., a total of 6 redirect urls.
 
-NOTE: This is subject to change, I'll find a better method that doesn't need so many redirect urls if I have time.
-
 Finally, it's recommended to set `NODE_ENV` to `production` on heroku, and `development` locally.
