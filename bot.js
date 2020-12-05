@@ -18,11 +18,9 @@ const redis_client = redis.createClient(redis_url);
 
 const { substring_distance } = require('./lib.js');
 
-// Here's the actual code for checking if the message comes from a bot
-function check_is_bot(message) {
-    // Step 1: remove all the weird characters
+function normalize_message(message) {
     const char_replace = { '1': 'l', '2': 'z', '3': 'e', '4': 'a', '5': 's', '6': 'b', '7': 't', '9': 'g', '0': 'o' };
-    const noramlized = message
+    return message
         // we decompose the message, so 'w̸̢͛' becomes [ "w", "̸", "̢", "͛" ]
         .normalize("NFD").split('')
         // this is in case the bot uses substitution, e.g. 13375p34k => leetspeak
@@ -31,17 +29,32 @@ function check_is_bot(message) {
         .filter(c => c.match(/[a-zA-Z]/))
         // turn the message back into a string
         .join('').toLowerCase();
+}
 
-    // Step 2: check if the message is from the bot
-    // we check if the message has these substrings:
+function check_bigfollow_bot(normalized_message) {
+    // we check if the message has both these substrings:
     // - big follows com
     // - Buy followers, primes and viewers
     // we use substring_distance and a threshold, so we can also detect it if the bot makes "typos"
     // e.g. we also detect "big follow com", or "bgi folows com"
-    var similarity = substring_distance('bigfollowscom', noramlized);
-    similarity += substring_distance('buyfollowersprimesandviewers', noramlized);
+    var similarity = substring_distance('bigfollowscom', normalized_message);
+    similarity += substring_distance('buyfollowersprimesandviewers', normalized_message);
     const similarity_threshold = 3;
     return (similarity <= similarity_threshold);
+}
+
+function check_banner_bot(normalized_message) {
+    // check for substring:
+    // 'I am going to create custom emotes and sub badges for your channel'
+    const similarity = substring_distance('iamgoingtocreatecustomemotesandsubbadgesforyourchannel', normalized_message);
+    const similarity_threshold = 3;
+    return (similarity <= similarity_threshold);
+}
+
+// Here's the actual code for checking if the message comes from a bot
+function check_is_bot(message) {
+    const normalized_message = normalize_message(message);
+    return (check_bigfollow_bot(normalized_message) || check_banner_bot(normalized_message));
 }
 
 // Here's the actual main function!
