@@ -25,7 +25,7 @@ function normalize_message(message) {
     };
     return message
         // we decompose the message, so 'w̸̢͛' becomes [ "w", "̸", "̢", "͛" ]
-        .normalize("NFD").split('')
+        .normalize("NFKD").split('')
         // this is in case the bot uses substitution, e.g. 13375p34k => leetspeak
         .map(c => { if (c in char_replace) { return char_replace[c]; } else { return c; } })
         // we only care about the alphabetic characters, remove everything else
