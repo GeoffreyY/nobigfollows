@@ -19,7 +19,10 @@ const redis_client = redis.createClient(redis_url);
 const { substring_distance } = require('./lib.js');
 
 function normalize_message(message) {
-    const char_replace = { '1': 'l', '2': 'z', '3': 'e', '4': 'a', '5': 's', '6': 'b', '7': 't', '9': 'g', '0': 'o' };
+    const char_replace = {
+        '1': 'l', '2': 'z', '3': 'e', '4': 'a', '5': 's', '6': 'b', '7': 't', '9': 'g', '0': 'o',
+        '@': 'a', "$": 's', "!": 'i'
+    };
     return message
         // we decompose the message, so 'w̸̢͛' becomes [ "w", "̸", "̢", "͛" ]
         .normalize("NFD").split('')
