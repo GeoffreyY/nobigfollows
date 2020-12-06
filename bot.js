@@ -34,30 +34,31 @@ function normalize_message(message) {
         .join('').toLowerCase();
 }
 
-function check_bigfollow_bot(normalized_message) {
+function check_bigfollow_bot(message) {
+    const normalized_message = normalize_message(message);
     // we check if the message has both these substrings:
-    // - big follows com
-    // - Buy followers, primes and viewers
-    // we use substring_distance and a threshold, so we can also detect it if the bot makes "typos"
-    // e.g. we also detect "big follow com", or "bgi folows com"
-    var similarity = substring_distance('bigfollowscom', normalized_message);
-    similarity += substring_distance('buyfollowersprimesandviewers', normalized_message);
+    const target_1 = normalize_message('big follows com');
+    const target_2 = normalize_message('Buy followers, primes and viewers');
+    // we calculate a substring_distance, and check the distance against a threshold
+    // so we can detect the bot even if it makes some "typos"
+    // e.g. we'll also detect "bg follow com", or "bgi folows com"
+    var similarity = substring_distance(target_1, normalized_message);
+    similarity += substring_distance(target_2, normalized_message);
     const similarity_threshold = 3;
     return (similarity <= similarity_threshold);
 }
 
-function check_banner_bot(normalized_message) {
-    // check for substring:
-    // 'I am going to create custom emotes and sub badges for your channel'
-    const similarity = substring_distance('iamgoingtocreatecustomemotesandsubbadgesforyourchannel', normalized_message);
+function check_banner_bot(message) {
+    const normalized_message = normalize_message(message);
+    const target = normalize_message('I am going to create custom emotes and sub badges for your channel');
+    const similarity = substring_distance(target, normalized_message);
     const similarity_threshold = 3;
     return (similarity <= similarity_threshold);
 }
 
 // Here's the actual code for checking if the message comes from a bot
 function check_is_bot(message) {
-    const normalized_message = normalize_message(message);
-    return (check_bigfollow_bot(normalized_message) || check_banner_bot(normalized_message));
+    return (check_bigfollow_bot(message) || check_banner_bot(message));
 }
 
 // Here's the actual main function!
