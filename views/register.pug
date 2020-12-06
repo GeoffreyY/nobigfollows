@@ -4,16 +4,17 @@ block variables
     -var title = 'Register'
 
 block main-content
-    h4 Please select plan type:
-    form.pt-2#full-form(action="/register/full", method="get").row.mb-2
-        div.col-1.text-center
-            button.btn.btn-primary.btn-sm(type="submit") Full
-        div#full-plan-description.col-11 Purges the bot when detected, but required channel moderator permission.
-    form.pt-2#strict-form(action="/register/strict", method="get").row.mb-2
-        div.col-1.text-center
-            button.btn.btn-primary.btn-sm(type="submit") Strict
-        div#strict-plan-description.col-11 Bans the bot when detected, instead of purging. Note: by using this plan you may risk my anti-bot accidentally banning the wrong people.
-    form#lite-form(action="/register/lite", method="get").row.mb-2
-        div.col-1.text-center
-            button.btn.btn-primary.btn-sm(type="submit") Lite
-        div#lite-plan-description.col-11 Doesn't require channel moderator permissions, but doesn't actually take action against the bot, only comments that "it's a bot". Used to test the functionality of this anti-bot bot.
+    div.container.pt-3.pb-3
+        h4 Please select plan type:
+        form.pt-2#full-form(action="/register/full", method="get").row.mb-2
+            div.col-md-1.text-center
+                button.btn.btn-primary.btn-sm(type="submit") Full
+            div#full-plan-description.col Purges the bot when detected, but required channel moderator permission.
+        form.pt-2#strict-form(action="/register/strict", method="get").row.mb-2
+            div.col-md-1.text-center
+                button.btn.btn-primary.btn-sm(type="submit") Strict
+            div#strict-plan-description.col Bans the bot when detected, instead of purging. Note: by using this plan you may risk my anti-bot accidentally banning the wrong people.
+        form#lite-form(action="/register/lite", method="get").row.mb-2
+            div.col-md-1.text-center
+                button.btn.btn-primary.btn-sm(type="submit") Lite
+            div#lite-plan-description.col Doesn't require channel moderator permissions, but doesn't actually take action against the bot, only comments that "it's a bot". Used to test the functionality of this anti-bot bot.

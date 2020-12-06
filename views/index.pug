@@ -4,15 +4,18 @@ block variables
     -var title = 'No Big Follows'
 
 block main-content
-    div.pb-3
+    div.container.pt-3.pb-3
         img(src="bot.png").pb-3
-        p.mb-0 This is an app (bot?) to purge this spam bot from your twitch chat.
-        p
+        p This is an app (bot?) to purge this spam bot from your twitch chat.
+        p.mb-0
             a(href="register") Click here
             |  to register my anti-bot thing into your channel.
+    div.container.pt-3.padding#mid-padding
+    div.container.pt-3.pb-3
         p.mb-0 I am 
             a(href="https://github.com/GeoffreyY/nobigfollows") open source
             | !
-    div
-        p Beta testing: detection of the following bot
+    div.container.pt-3.padding#mid-padding
+    div.container.pt-3.pb-3
+        p Beta testing - detection of this bot:
         img(src="banner_bot.png")

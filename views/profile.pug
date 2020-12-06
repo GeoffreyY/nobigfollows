@@ -1,8 +1,8 @@
 extends template
 
 block main-content
-    div#bots_detected
-        p 
+    div.container.pt-3.pb-3#bots_detected
+        p.mb-0
             | We have purged #{bots_detected} bot
             if bots_detected != 1
                 | s 
@@ -11,17 +11,19 @@ block main-content
                 | !
             else
                 | .
-    div#access_token
+    div.container.pt-3.padding#mid-padding
+    div.container.pt-3.pb-3#access_token
         if access_token
             p Your access code: 
                 code= access_token
-            p
+            p.mb-0
                 | If you don't trust our unregistration, you can manually revoke the access code, as 
                 a(href="https://dev.twitch.tv/docs/authentication#revoking-access-tokens") described here
                 | . You'll also need the client id for our anti-bot app, which is 
                 code gu3obem5ai7iojido9u2zjk8cniu0v
                 | .
         else
-            p We don't have an access code for your twitch account
-    div#profile-note.mt-4
-        p Note: I'm too lazy to deal with cookies / more authentication stuff, so you'll need to re-login everytime you visit this profile page. This includes refreshing the page. I might fix this later.
+            p.mb-0 We don't have an access code for your twitch account            
+    div.container.pt-3.padding#mid-padding
+    div.container.pt-3.pb-3#profile-note
+        p.mb-0 Note: I'm too lazy to deal with cookies / more authentication stuff, so you'll need to re-login everytime you visit this profile page. This includes refreshing the page. I might fix this later.
