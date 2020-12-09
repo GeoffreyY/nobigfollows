@@ -92,6 +92,8 @@ async function create_worker(twitch_id) {
         }
         if (check_is_bot(message)) {
             console.log('detected bot:', channel, user, message);
+            // artificial 1 sec delay for reasons
+            await new Promise((resolve, reject) => setTimeout(resolve, 1000));
             if (plan_type === 'full') {
                 // someone wanted to purge instead of ban the bots
                 // so in case our anti-bot failed and detect real people as bot,
