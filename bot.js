@@ -56,9 +56,13 @@ function check_banner_bot(message) {
     return (similarity <= similarity_threshold);
 }
 
+function check_ezfollow_bot(message) {
+    return message.includes('tinyurl.com/ezfollow');
+}
+
 // Here's the actual code for checking if the message comes from a bot
 function check_is_bot(message) {
-    return (check_bigfollow_bot(message) || check_banner_bot(message));
+    return (check_bigfollow_bot(message) || check_banner_bot(message) || check_ezfollow_bot(message));
 }
 
 // Here's the actual main function!
