@@ -60,9 +60,20 @@ function check_ezfollow_bot(message) {
     return message.includes('tinyurl.com/ezfollow');
 }
 
+function check_twitchclips_bot(message) {
+    const normalized_message = normalize_message(message);
+    const target = normalize_message('i found you on this website');
+    const similarity = substring_distance(target, normalized_message);
+    const similarity_threshold = 2;
+    return (similarity <= similarity_threshold);
+}
+
 // Here's the actual code for checking if the message comes from a bot
 function check_is_bot(message) {
-    return (check_bigfollow_bot(message) || check_banner_bot(message) || check_ezfollow_bot(message));
+    return (check_bigfollow_bot(message) ||
+        check_banner_bot(message) ||
+        check_ezfollow_bot(message) ||
+        check_twitchclips_bot(message));
 }
 
 // Here's the actual main function!
