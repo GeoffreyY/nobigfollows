@@ -80,8 +80,16 @@ async function get_user_data(access_token) {
 app.set('view engine', 'pug')
 app.use(express.static('static'));
 
-app.get("/", function (req, res) {
-    res.render(`index`);
+app.get("/", async function (req, res) {
+    const total_bots_detected_res = await db_pool
+        .query('SELECT bots_detected FROM stats WHERE stats.twitch_id = 0;')
+        .catch(err => { console.error(err); throw new Error("Couldn't query total_bots_detected.") });
+    const num_of_channels_res = await db_pool
+        .query('SELECT count(*) FROM access_tokens;')
+        .catch(err => { console.error(err); throw new Error("Couldn't query num_of_channels.") });
+    const { bots_detected: total_bots_detected } = total_bots_detected_res.rows[0];
+    const { count: num_of_channels } = num_of_channels_res.rows[0];
+    res.render(`index`, { total_bots_detected, num_of_channels });
 });
 
 app.get("/register", function (req, res) {
