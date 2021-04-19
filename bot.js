@@ -39,11 +39,14 @@ function check_bigfollow_bot(message) {
     // we check if the message has both these substrings:
     const target_1 = normalize_message('big follows com');
     const target_2 = normalize_message('Buy followers, primes and viewers');
+    const target_2a = normalize_message('Buy followers, primes and viewers');
     // we calculate a substring_distance, and check the distance against a threshold
     // so we can detect the bot even if it makes some "typos"
     // e.g. we'll also detect "bg follow com", or "bgi folows com"
     var similarity = substring_distance(target_1, normalized_message);
-    similarity += substring_distance(target_2, normalized_message);
+    const similarity_2 = Math.min(substring_distance(target_2, normalized_message),
+        substring_distance(target_2a, normalized_message));
+    similarity += similarity_2;
     const similarity_threshold = 3;
     return (similarity <= similarity_threshold);
 }
